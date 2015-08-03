@@ -64,12 +64,9 @@ class ElementGrabber
 			encoding_converter = nil
 
 			while chunk = (response.body.readpartial(BLOCK_SIZE))
-				unless detected_encoding
-					detected_encoding = @encoding_detector.detect(chunk)
-				end
+				detected_encoding ||= guess_encoding(chunk)
 				so_far += chunk.size
-				encoded_chunk = CharlockHolmes::Converter.convert(chunk, detected_encoding[:encoding], 'UTF-8')
-				parser << encoded_chunk
+				parser << convert_encoding(encoded_chunk, detected_encoding)
 
 				if so_far > read_limit
 					response.body.close
@@ -86,6 +83,14 @@ class ElementGrabber
 	rescue => e
 		warn("Exception processing #{uri}: #{e.class}, #{e.message}, #{e.backtrace.join("\n")}")
 		return content
+	end
+
+	def guess_encoding(text)
+		@encoding_detector.detect(text)
+	end
+
+	def convert_encoding(text, encoding)
+		CharlockHolmes::Converter.convert(chunk, encoding[:encoding], 'UTF-8')
 	end
 
 	def get_with_redirect(url, redirections = Set.new)
