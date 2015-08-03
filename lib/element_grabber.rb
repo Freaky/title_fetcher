@@ -22,10 +22,9 @@ class ElementGrabber
 		end
 
 		def after_element(namespace, name)
-			if inside? and name.casecmp(@element).zero?
-				@callback.call(@content.join)
-				@inside -= 1
-			end
+			return unless inside? and name.casecmp(@element).zero?
+			@callback.call(@content.join)
+			@inside -= 1
 		end
 
 		def on_text(text)
@@ -66,7 +65,7 @@ class ElementGrabber
 			while chunk = (response.body.readpartial(BLOCK_SIZE))
 				detected_encoding ||= guess_encoding(chunk)
 				so_far += chunk.size
-				parser << convert_encoding(encoded_chunk, detected_encoding)
+				parser << convert_encoding(chunk, detected_encoding)
 
 				if so_far > read_limit
 					response.body.close
@@ -81,7 +80,7 @@ class ElementGrabber
 
 		return content
 	rescue => e
-		warn("Exception processing #{uri}: #{e.class}, #{e.message}, #{e.backtrace.join("\n")}")
+		warn("Exception processing #{url}: #{e.class}, #{e.message}, #{e.backtrace.join("\n")}")
 		return content
 	end
 
@@ -90,7 +89,7 @@ class ElementGrabber
 	end
 
 	def convert_encoding(text, encoding)
-		CharlockHolmes::Converter.convert(chunk, encoding[:encoding], 'UTF-8')
+		CharlockHolmes::Converter.convert(text, encoding[:encoding], 'UTF-8')
 	end
 
 	def get_with_redirect(url, redirections = Set.new)
@@ -106,7 +105,8 @@ class ElementGrabber
 				target = "#{uri.scheme}://#{uri.host}:#{uri.port}#{target}"
 			end
 
-			return nil if redirections.include?(target) or redirections.size > REDIRECTION_LIMIT
+			return if redirections.include?(target)
+			return if redirections.size > REDIRECTION_LIMIT
 			redirections << target
 
 			return get_with_redirect(target, redirections)
