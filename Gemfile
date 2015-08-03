@@ -5,3 +5,5 @@ gem 'charlock_holmes-jruby', platform: 'jruby'
 gem 'mojibake'
 gem 'http'
 gem 'oga'
+
+$LOAD_PATH.unshift(File.join(__dir__, 'lib'))
