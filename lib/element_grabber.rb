@@ -11,44 +11,46 @@ class ElementGrabber
 
 	class ElementExtractor
 		def initialize(element, &callback)
-			@element = element
+			@element  = element
 			@callback = callback
-			@in_element = false
-			@content = []
+			@inside   = 0
+			@content  = []
 		end
 
 		def on_element(namespace, name, attrs = {})
-			if name == @element
-				@in_element = true
-			end
+			@inside += 1 if name.casecmp(@element).zero?
 		end
 
 		def after_element(namespace, name)
-			if @in_element and name == @element
+			if inside? and name.casecmp(@element).zero?
 				@callback.call(@content.join)
+				@inside -= 1
 			end
 		end
 
 		def on_text(text)
-			if @in_element
-				@content << text
-			end
+			@content << text if inside?
 		end
+
+		def inside?() @inside > 0 end
 	end
 
 	BLOCK_SIZE        = 32 * 1024
 	REDIRECTION_LIMIT = 6
+	ALLOWED_SCHEMES   = %w(http https).freeze
 
-	def initialize(tag, read_limit: 64 * 1024)
+	def initialize(tag, read_limit: 128 * 1024)
 		@tag = tag
 		@read_limit = Integer(read_limit)
 		@encoding_detector = CharlockHolmes::EncodingDetector.new
 	end
 
 	def from_url(url, redirections = Set.new)
+		return unless ALLOWED_SCHEMES.include? URI.parse(url).scheme
+
 		content = nil
 		client = HTTPClient.new
-		request = client.get_async(url) #, {'Accept' => 'text/html; application/xml+xhtml'})
+		request = client.get_async(url)
 		response = request.pop
 
 		if response.redirect?
@@ -74,18 +76,18 @@ class ElementGrabber
 			throw :done
 		end
 
+		so_far = 0
 		reader = Enumerator.new do |parser|
-			so_far = 0
 			detected_encoding = nil
 			encoding_converter = nil
 
-			while chunk = response.content.readpartial(BLOCK_SIZE)
+			while chunk = (response.content.readpartial(BLOCK_SIZE) rescue nil)
 				unless detected_encoding
 					detected_encoding = @encoding_detector.detect(chunk)
 				end
+				so_far += chunk.size
 				encoded_chunk = CharlockHolmes::Converter.convert(chunk, detected_encoding[:encoding], 'UTF-8')
 				parser << encoded_chunk
-				so_far += chunk.size
 
 				if so_far > read_limit
 					response.content.close
@@ -97,6 +99,7 @@ class ElementGrabber
 		catch(:done) do
 			Oga.sax_parse_html(extractor, reader)
 		end
+		p "read #{so_far}"
 
 		return content
 	rescue => e
