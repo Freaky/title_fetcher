@@ -4,6 +4,7 @@ require 'set'
 require 'charlock_holmes'
 require 'http'
 require 'oga'
+require 'mojibake'
 
 class ElementGrabber
 	attr_reader :read_limit
@@ -20,7 +21,9 @@ class ElementGrabber
 	def initialize(tag, read_limit: DEFAULT_READ_LIMIT)
 		@tag = tag
 		@read_limit = Integer(read_limit)
-		@encoding_detector = CharlockHolmes::EncodingDetector.new rescue CharlockHolmes::EncodingDetector
+		@encoding_detector  = CharlockHolmes::EncodingDetector.new rescue CharlockHolmes::EncodingDetector
+		@encoding_converter = CharlockHolmes::Converter
+		@encoding_fixer     = MojiBake::Mapper.new
 	end
 
 	def from_url(url)
@@ -62,7 +65,8 @@ class ElementGrabber
 	def guess_encoding(text) @encoding_detector.detect(text) end
 
 	def convert_encoding(text, encoding)
-		CharlockHolmes::Converter.convert(text, encoding[:encoding], 'UTF-8')
+		converted = @encoding_converter.convert(text, encoding[:encoding], 'UTF-8')
+		@encoding_fixer.recover(converted).scrub
 	end
 
 	def get_with_redirect(url, redirections = Set.new)
