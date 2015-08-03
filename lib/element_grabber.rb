@@ -21,7 +21,7 @@ class ElementGrabber
 		@encoding_detector = CharlockHolmes::EncodingDetector.new
 	end
 
-	def from_url(url, redirections = Set.new)
+	def from_url(url)
 		content = nil
 		return unless ALLOWED_SCHEMES.include? URI.parse(url).scheme
 
