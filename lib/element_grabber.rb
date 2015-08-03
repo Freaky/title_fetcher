@@ -35,10 +35,7 @@ class ElementGrabber
 
 		so_far = 0
 		reader = Enumerator.new do |parser|
-			detected_encoding = nil
-			encoding_converter = nil
-
-			while chunk = (response.body.readpartial(BLOCK_SIZE))
+			while chunk = response.body.readpartial(BLOCK_SIZE)
 				so_far += chunk.size
 				detected_encoding ||= guess_encoding(chunk)
 				parser << convert_encoding(chunk, detected_encoding)
@@ -96,11 +93,11 @@ class ElementGrabber
 			@content  = []
 		end
 
-		def on_element(namespace, name, attrs = {})
+		def on_element(_namespace, name, _attrs = {})
 			@inside += 1 if name.casecmp(@element).zero?
 		end
 
-		def after_element(namespace, name)
+		def after_element(_namespace, name)
 			return unless inside? and name.casecmp(@element).zero?
 			@callback.call(@content.join)
 			@inside -= 1
