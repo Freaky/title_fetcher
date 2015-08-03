@@ -34,9 +34,9 @@ class ElementGrabber
 		def inside?() @inside > 0 end
 	end
 
-	BLOCK_SIZE        = 32 * 1024
-	REDIRECTION_LIMIT = 6
-	ALLOWED_SCHEMES   = %w(http https).freeze
+	BLOCK_SIZE            = 32 * 1024
+	REDIRECTION_LIMIT     = 6
+	ALLOWED_SCHEMES       = %w(http https).freeze
 	ALLOWED_CONTENT_TYPES = %r{\A(?:text/|application/(?:xml|xhtml))}
 
 	def initialize(tag, read_limit: 128 * 1024)
