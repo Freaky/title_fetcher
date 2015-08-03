@@ -38,6 +38,7 @@ class ElementGrabber
 	BLOCK_SIZE        = 32 * 1024
 	REDIRECTION_LIMIT = 6
 	ALLOWED_SCHEMES   = %w(http https).freeze
+	ALLOWED_CONTENT_TYPES = %r{\A(?:text/|application/(?:xml|xhtml))}
 
 	def initialize(tag, read_limit: 128 * 1024)
 		@tag = tag
@@ -50,8 +51,7 @@ class ElementGrabber
 		return unless ALLOWED_SCHEMES.include? URI.parse(url).scheme
 
 		return unless response = get_with_redirect(url)
-		return nil unless response.status.ok?
-		return nil if response.content_type.mime_type !~ %r{\A(?:text/|application/(?:xml|xhtml))}
+		return unless ALLOWED_CONTENT_TYPES.match response.content_type.mime_type
 
 		extractor = ElementExtractor.new(@tag) do |text|
 			content = text
