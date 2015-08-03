@@ -9,12 +9,13 @@ require 'oga'
 class ElementGrabber
 	attr_reader :read_limit
 
+	DEFAULT_READ_LIMIT    = 128 * 1024 # 128k
 	BLOCK_SIZE            = 32 * 1024
 	REDIRECTION_LIMIT     = 6
 	ALLOWED_SCHEMES       = %w(http https).freeze
 	ALLOWED_CONTENT_TYPES = %r{\A(?:text/|application/(?:xml|xhtml))}
 
-	def initialize(tag, read_limit: 128 * 1024)
+	def initialize(tag, read_limit: DEFAULT_READ_LIMIT)
 		@tag = tag
 		@read_limit = Integer(read_limit)
 		@encoding_detector = CharlockHolmes::EncodingDetector.new
