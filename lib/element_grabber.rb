@@ -59,9 +59,7 @@ class ElementGrabber
 		return content
 	end
 
-	def guess_encoding(text)
-		@encoding_detector.detect(text)
-	end
+	def guess_encoding(text) @encoding_detector.detect(text) end
 
 	def convert_encoding(text, encoding)
 		CharlockHolmes::Converter.convert(text, encoding[:encoding], 'UTF-8')
