@@ -17,7 +17,7 @@ class ElementGrabber
 	def initialize(tag, read_limit: DEFAULT_READ_LIMIT)
 		@tag = tag
 		@read_limit = Integer(read_limit)
-		@encoding_detector = CharlockHolmes::EncodingDetector.new
+		@encoding_detector = CharlockHolmes::EncodingDetector.new rescue CharlockHolmes::EncodingDetector
 	end
 
 	def from_url(url)
