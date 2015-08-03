@@ -13,6 +13,9 @@ class ElementGrabber
 	REDIRECTION_LIMIT     = 6
 	ALLOWED_SCHEMES       = %w(http https).freeze
 	ALLOWED_CONTENT_TYPES = %r{\A(?:text/|application/(?:xml|xhtml))}
+	DEFAULT_HEADERS       = {
+		HTTP::Headers::USER_AGENT => self.name
+	}
 
 	def initialize(tag, read_limit: DEFAULT_READ_LIMIT)
 		@tag = tag
@@ -63,7 +66,7 @@ class ElementGrabber
 	end
 
 	def get_with_redirect(url, redirections = Set.new)
-		response = HTTP.get(url)
+		response = HTTP.headers(DEFAULT_HEADERS).get(url)
 
 		case response.status.code
 		when 301, 302, 303, 307, 308
