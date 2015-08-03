@@ -63,8 +63,8 @@ class ElementGrabber
 			encoding_converter = nil
 
 			while chunk = (response.body.readpartial(BLOCK_SIZE))
-				detected_encoding ||= guess_encoding(chunk)
 				so_far += chunk.size
+				detected_encoding ||= guess_encoding(chunk)
 				parser << convert_encoding(chunk, detected_encoding)
 
 				if so_far > read_limit
