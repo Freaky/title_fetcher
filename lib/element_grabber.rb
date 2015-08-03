@@ -3,8 +3,8 @@ require 'set'
 
 require 'charlock_holmes'
 require 'http'
-require 'oga'
 require 'mojibake'
+require 'oga'
 
 class ElementGrabber
 	attr_reader :read_limit

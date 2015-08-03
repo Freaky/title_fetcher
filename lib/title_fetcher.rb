@@ -1,5 +1,5 @@
 
-require_relative 'element_grabber'
+require 'element_grabber'
 
 class TitleFetcher
 	attr_reader :target, :max
