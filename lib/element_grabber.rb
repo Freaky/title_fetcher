@@ -9,31 +9,6 @@ require 'oga'
 class ElementGrabber
 	attr_reader :read_limit
 
-	class ElementExtractor
-		def initialize(element, &callback)
-			@element  = element
-			@callback = callback
-			@inside   = 0
-			@content  = []
-		end
-
-		def on_element(namespace, name, attrs = {})
-			@inside += 1 if name.casecmp(@element).zero?
-		end
-
-		def after_element(namespace, name)
-			return unless inside? and name.casecmp(@element).zero?
-			@callback.call(@content.join)
-			@inside -= 1
-		end
-
-		def on_text(text)
-			@content << text if inside?
-		end
-
-		def inside?() @inside > 0 end
-	end
-
 	BLOCK_SIZE            = 32 * 1024
 	REDIRECTION_LIMIT     = 6
 	ALLOWED_SCHEMES       = %w(http https).freeze
@@ -112,5 +87,28 @@ class ElementGrabber
 			return get_with_redirect(target, redirections)
 		else return response if response.status.ok?
 		end
+	end
+
+	class ElementExtractor
+		def initialize(element, &callback)
+			@element  = element
+			@callback = callback
+			@inside   = 0
+			@content  = []
+		end
+
+		def on_element(namespace, name, attrs = {})
+			@inside += 1 if name.casecmp(@element).zero?
+		end
+
+		def after_element(namespace, name)
+			return unless inside? and name.casecmp(@element).zero?
+			@callback.call(@content.join)
+			@inside -= 1
+		end
+
+		def on_text(text) @content << text if inside? end
+
+		def inside?() @inside > 0 end
 	end
 end
