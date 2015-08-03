@@ -3,7 +3,7 @@
 require 'set'
 
 require 'charlock_holmes'
-require 'httpclient'
+require 'http'
 require 'oga'
 
 class ElementGrabber
@@ -46,30 +46,12 @@ class ElementGrabber
 	end
 
 	def from_url(url, redirections = Set.new)
+		content = nil
 		return unless ALLOWED_SCHEMES.include? URI.parse(url).scheme
 
-		content = nil
-		client = HTTPClient.new
-		request = client.get_async(url)
-		response = request.pop
-
-		if response.redirect?
-			target = response.headers['Location']
-			return nil if target.nil? or target.empty?
-
-			if target.start_with?('/')
-				uri = URI.parse(url)
-				target = "#{uri.scheme}://#{uri.host}:#{uri.port}#{target}"
-			end
-
-			return nil if redirections.include?(target) or redirections.size > REDIRECTION_LIMIT
-			redirections << target
-
-			return from_url(target, redirections)
-		end
-
-		return nil unless response.status == 200
-		return nil if response.content_type !~ %r{\A(?:text/|application/(?:xml|xhtml))}
+		return unless response = get_with_redirect(url)
+		return nil unless response.status.ok?
+		return nil if response.content_type.mime_type !~ %r{\A(?:text/|application/(?:xml|xhtml))}
 
 		extractor = ElementExtractor.new(@tag) do |text|
 			content = text
@@ -81,7 +63,7 @@ class ElementGrabber
 			detected_encoding = nil
 			encoding_converter = nil
 
-			while chunk = (response.content.readpartial(BLOCK_SIZE) rescue nil)
+			while chunk = (response.body.readpartial(BLOCK_SIZE))
 				unless detected_encoding
 					detected_encoding = @encoding_detector.detect(chunk)
 				end
@@ -90,7 +72,7 @@ class ElementGrabber
 				parser << encoded_chunk
 
 				if so_far > read_limit
-					response.content.close
+					response.body.close
 					throw :done
 				end
 			end
@@ -99,11 +81,31 @@ class ElementGrabber
 		catch(:done) do
 			Oga.sax_parse_html(extractor, reader)
 		end
-		p "read #{so_far}"
 
 		return content
 	rescue => e
 		warn("Exception processing #{uri}: #{e.class}, #{e.message}, #{e.backtrace.join("\n")}")
 		return content
+	end
+
+	def get_with_redirect(url, redirections = Set.new)
+		return unless response = HTTP.get(url)
+
+		case response.status.code
+		when 301, 302, 303, 307, 308
+			target = response['Location']
+			return nil if target.nil? or target.empty?
+
+			if target.start_with?('/')
+				uri = URI.parse(url)
+				target = "#{uri.scheme}://#{uri.host}:#{uri.port}#{target}"
+			end
+
+			return nil if redirections.include?(target) or redirections.size > REDIRECTION_LIMIT
+			redirections << target
+
+			return get_with_redirect(target, redirections)
+		else return response if response.status.ok?
+		end
 	end
 end
