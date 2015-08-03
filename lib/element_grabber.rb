@@ -93,7 +93,7 @@ class ElementGrabber
 			@content  = []
 		end
 
-		def on_element(_namespace, name, _attrs = {})
+		def on_element(_namespace, name, _attrs)
 			@inside += 1 if name.casecmp(@element).zero?
 		end
 
