@@ -93,7 +93,7 @@ class ElementGrabber
 	end
 
 	def get_with_redirect(url, redirections = Set.new)
-		return unless response = HTTP.get(url)
+		response = HTTP.get(url)
 
 		case response.status.code
 		when 301, 302, 303, 307, 308
