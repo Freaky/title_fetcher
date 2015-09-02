@@ -7,7 +7,7 @@ source = ARGV
 source = $stdin if ARGV.first == '-'
 
 ret = 1
-tf = TitleFetcher.new
+tf = TitleFetcher.new(target: 170, max: 200)
 source.each do |url|
 	if title = tf.fetch(url)
 		ret = 0
