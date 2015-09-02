@@ -13,7 +13,14 @@ class TitleFetcher
 	def fetch(url)
 		title = @fetcher.from_url(url) or return nil
 
-		sanitize_and_shorten(title)
+		title = sanitize_and_shorten(title)
+
+		words = title.scan(/\w+/).map(&:downcase)
+		dcurl = url.downcase
+
+		return nil if title.casecmp(url).zero?
+		return nil if words.all? {|word| dcurl.include? word }
+		return title
 	end
 
 	def sanitize_and_shorten(text)
