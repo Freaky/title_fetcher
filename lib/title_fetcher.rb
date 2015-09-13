@@ -4,10 +4,11 @@ require 'element_grabber'
 class TitleFetcher
 	attr_reader :target, :max
 
-	def initialize(target: 80, max: 120)
+	def initialize(target: 80, max: 120, allow_in_url: true)
 		@fetcher = ElementGrabber.new('title')
 		@target  = Integer(target)
 		@max     = Integer(max)
+		@allow_in_url = allow_in_url
 	end
 
 	def fetch(url)
@@ -19,7 +20,7 @@ class TitleFetcher
 		dcurl = url.downcase
 
 		return nil if title.casecmp(url).zero?
-		return nil if words.all? {|word| dcurl.include? word }
+		return nil if !allow_in_url && words.all? {|word| dcurl.include? word }
 		return title
 	end
 
