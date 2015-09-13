@@ -2,10 +2,10 @@
 
 TitleFetcher fetches title elements from websites.
 
-  require 'titlefetcher'
-
-  tf = TitleFetcher.new
-  tf.fetch "http://freshbsd.org" # => "FreshBSD - The latest BSD Commits"
+    require 'titlefetcher'
+    
+    tf = TitleFetcher.new
+    tf.fetch "http://freshbsd.org" # => "FreshBSD - The latest BSD Commits"
 
 It tries to guess charset and converts/scrubs to UTF-8, making some effort
 to correct common Mojibake issues.
